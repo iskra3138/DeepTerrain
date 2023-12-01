@@ -137,9 +137,9 @@ class NBDataset(data.Dataset):
 
         # Scaling
         ### save min_z, max_z to scale B into [-1, 1] since output of net is tanh
-        #min_z = mat['voxel-bottom'].min() #
-        min_z = B.min()
-        max_z = mat['voxel-top'].max() #B.max()
+        min_z = mat['voxel-bottom'].min() #
+        #min_z = B.min()
+        max_z = mat['voxel-bottom'].max() #B.max()
         ### For elevation rasters, all values will be scaled with min_z and max_z
         ### For statistic rasters, each raster will be scaled to [0, 1]
         if self.pred_type == 'tanh' :
@@ -168,16 +168,16 @@ class NBDataset(data.Dataset):
         if self.split == 'train' :
             return {'A': A,
                     'B': B,
-                    'B_min': min_z,
-                    'B_max': max_z,
+                    'A_min': min_z,
+                    'A_max': max_z,
                     'filename': self.filenames[index]
                     }
         else :
             return {'A': A,
                     'B': B,
                     'seg': seg,
-                    'B_min': min_z,
-                    'B_max': max_z,
+                    'A_min': min_z,
+                    'A_max': max_z,
                     'filename': self.filenames[index],
                     'shape': B.shape[1:3]
                     }

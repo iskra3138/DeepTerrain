@@ -9,8 +9,9 @@ import torch.utils.data
 
 from dataloaders import build_dataloader
 from models.pix2pix_model import Pix2PixModel
+from utils.utils import create_logger
 
-def print_current_losses(epoch, iters, losses, t_comp, t_data):
+def print_current_losses(epoch, iters, losses, t_comp, t_data, logger):
     """print current losses on console; also save the losses to the disk
 
     Parameters:
@@ -24,7 +25,8 @@ def print_current_losses(epoch, iters, losses, t_comp, t_data):
     for k, v in losses.items():
         message += '%s: %.3f ' % (k, v)
 
-    print(message)
+    #print(message)
+    logger.info(message)
 
 
 @gin.configurable
@@ -39,7 +41,9 @@ def train(
         print_freq,
         save_latest_freq,
         save_epoch_freq,
-        save_by_iter
+        save_by_iter,
+        save_dir,
+        logger
 ) :
     # set gpu ids
     str_ids = args.gpu_ids.split(',')
@@ -59,28 +63,37 @@ def train(
         args.device = torch.device("cpu")
 
     ## build_dataloader
-    print("=> creating data loaders ... ")
+    #print("=> creating data loaders ... ")
+    logger.info('------------------------- creating data loaders -------------------------')
 
     train_loader, input_nc = build_dataloader('train',
                                                    args.dataset,
                                                    batch_size=batch_size,
                                                    num_workers=num_threads,
                                                    shuffle=not serial_batches,
-                                                   pin_momory=True
+                                                   pin_momory=True,
+                                                   logger=logger
                                                    )
-
-    print (100*'#')
-    print ('input ch: ', input_nc)
-    print (100*'#')
+    logger.info('------------------------- created data loaders -------------------------')
+    logger.info('input ch: %d' % input_nc)
+    #print (100*'#')
+    #print ('input ch: ', input_nc)
+    #print (100*'#')
 
     ## build_model
-    print("=> creating model and optimizer ... ", end='')
-    model = Pix2PixModel(args, input_nc=input_nc)
+    #print("=> creating model and optimizer ... ", end='')
+    logger.info('------------------------- creating model -------------------------')
+    model = Pix2PixModel(args, save_dir=save_dir, input_nc=input_nc, logger=logger)
     model.setup(epoch_count, n_epochs, n_epochs_decay)
+    logger.info('------------------------- created model -------------------------')
 
     total_iters = 0
 
-    print(gin.operative_config_str())
+    # write config file
+    #print(gin.operative_config_str())
+    logger.info(gin.operative_config_str())
+    with open(os.path.join(save_dir, "train_config.gin"), "w") as f:
+        f.write(gin.operative_config_str())
 
     # main loop
     for epoch in range(epoch_count, n_epochs + n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
@@ -101,10 +114,10 @@ def train(
             if total_iters % print_freq == 0:    # print training losses and save logging information to the disk
                 losses = model.get_current_losses()
                 t_comp = (time.time() - iter_start_time) / batch_size
-                print_current_losses(epoch, epoch_iter, losses, t_comp, t_data)
+                print_current_losses(epoch, epoch_iter, losses, t_comp, t_data, logger)
 
             if total_iters % save_latest_freq == 0:   # cache our latest model every <save_latest_freq> iterations
-                print('saving the latest model (epoch %d, total_iters %d)' % (epoch, total_iters))
+                #print('saving the latest model (epoch %d, total_iters %d)' % (epoch, total_iters))
                 save_suffix = 'iter_%d' % total_iters if save_by_iter else 'latest'
                 model.save_networks(save_suffix)
 
@@ -121,12 +134,12 @@ def train(
         """
 
         if epoch % save_epoch_freq == 0:   # cache our model every <save_epoch_freq> epochs
-            print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
+            #print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
             model.save_networks('latest')
-            model.save_networks(epoch)
+            #model.save_networks(epoch)
 
-        print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, n_epochs + n_epochs_decay, time.time() - epoch_start_time))
-
+        #print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, n_epochs + n_epochs_decay, time.time() - epoch_start_time))
+        logger.info('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, n_epochs + n_epochs_decay, time.time() - epoch_start_time))
 def main():
     parser = argparse.ArgumentParser(description='DSM-to-DTM')
     parser.add_argument('--config', type=str, default='./config/NB/train.gin', help='path of configures')
@@ -134,18 +147,22 @@ def main():
     parser.add_argument('--name', type=str, default='als2dtm_pix2pix_debug',
                         help='name of the experiment. It decides where to store samples and models')
     parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-    parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
+    parser.add_argument('--checkpoints_dir', type=str, default='./results', help='models are saved here')
 
     args = parser.parse_args()
-    #assert args.dataset in ['NB', 'DALES', 'DALESDSP'], 'NB or DALES'
-
-    #args.config = './config/NBYJ/train.gin'
-    #args.dataset = 'NBYJ'
-
     gin.parse_config_file(args.config)
 
-    train(args)
+    # Make save directory
+    save_dir = os.path.join(args.checkpoints_dir, args.name)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
+    log_file_name = os.path.join(save_dir, "train_log.txt")
+    logger = create_logger(log_file_name)
+
+    start = time.time()
+    train(args, save_dir = save_dir, logger = logger)
+    print ('total training time: ', time.time() - start)
 
 if __name__ == '__main__':
     main()

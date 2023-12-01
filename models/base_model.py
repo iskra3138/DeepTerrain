@@ -15,29 +15,9 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, args,
-                            input_nc,
-                            output_nc,
-                             ngf,
-                             ndf,
-                             netG,
-                             netD,
-                             norm,
-                             no_dropout,
-                             init_type,
-                             init_gain,
-                             n_layers_D,
-                             gan_mode,
-                             verbose,
-                             isTrain,
-                             load_iter,
-                             epoch,
-                             continue_train,
-                             lr,
-                             beta1,
-                             lambda_L1,
-                             lr_policy,
-                             lr_decay_iters):
+    def __init__(self, args, save_dir, input_nc, output_nc,  ngf,  ndf, netG,  netD,  norm,  no_dropout,  init_type,
+                 init_gain, n_layers_D, gan_mode, verbose,  isTrain,  load_iter, epoch,  logger,
+                 continue_train, lr, beta1, lambda_L1, lr_policy, lr_decay_iters, ):
         """Initialize the BaseModel class.
 
         Parameters:
@@ -54,9 +34,9 @@ class BaseModel(ABC):
         self.args = args
         self.gpu_ids = args.gpu_ids
         self.device = args.device #torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
-        self.save_dir = os.path.join(args.checkpoints_dir, args.name)  # save all the checkpoints to save_dir
-        if not os.path.exists(self.save_dir) :
-            os.makedirs(self.save_dir)
+        self.save_dir = save_dir #os.path.join(args.checkpoints_dir, args.name)  # save all the checkpoints to save_dir
+        #if not os.path.exists(self.save_dir) :
+        #    os.makedirs(self.save_dir)
         #if args.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
         #    torch.backends.cudnn.benchmark = True
 
@@ -80,6 +60,8 @@ class BaseModel(ABC):
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
         self.RMSE = 0
+        self.RMSE2 = 0
+        self.logger = logger
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
@@ -169,7 +151,7 @@ class BaseModel(ABC):
                 scheduler.step()
 
         lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+        self.logger.info('learning rate %.7f -> %.7f' % (old_lr, lr))
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
@@ -232,7 +214,7 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
-                print('loading the model from %s' % load_path)
+                self.logger.info('loading the model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
                 state_dict = torch.load(load_path, map_location=str(self.device))
@@ -250,7 +232,8 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        self.logger.info('---------- Networks initialized -------------')
+
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -258,9 +241,9 @@ class BaseModel(ABC):
                 for param in net.parameters():
                     num_params += param.numel()
                 if verbose:
-                    print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
-        print('-----------------------------------------------')
+                    self.logger.info(net)
+                self.logger.info('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+        self.logger.info('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations

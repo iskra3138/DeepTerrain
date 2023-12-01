@@ -1,11 +1,16 @@
+#pred_type = 'sigmoid'
+pred_type = 'tanh'
+
 # Data
+DALESDSPDataset.pred_type = %pred_type
 DALESDSPDataset.dataroot = '/nas2/YJ/DATA/ALS2DTM/'
 #### input_list is combination of 'voxel-top', 'voxel-bottom', 'pixel-mean', 'density', 'stdev' and 'echoes'
 DALESDSPDataset.input_list = [
-    'voxel-bottom' #,  'voxel-bottom', 'pixel-mean'# , 'density', 'stdev', 'echoes'
+    "voxel-bottom" #,  'voxel-bottom', 'pixel-mean', 'density', 'stdev', 'echoes'
 ]
 
 # Model
+Pix2PixModel.pred_type = %pred_type
 #Pix2PixModel.input_nc = 1 # number of input channels
 Pix2PixModel.output_nc = 1 # number of output channels
 Pix2PixModel.ngf = 64 # number of gen filters in the last conv layer
@@ -19,4 +24,6 @@ Pix2PixModel.init_gain = 0.02 # scaling factor for normal, xavier and orthogonal
 Pix2PixModel.n_layers_D = 3 # only used if netD==n_layers 
 Pix2PixModel.gan_mode = 'vanilla' # the type of GAN objective. [vanilla| lsgan | wgangp]. vanilla GAN loss is the cross-entropy objective used in the original GAN paper.
 Pix2PixModel.verbose = False # if specified, print more debugging information
-
+Pix2PixModel.aux_loss = 'na' # gan, na, tv1, tv2
+# Network
+UnetSkipConnectionBlock.pred_type = %pred_type

@@ -16,9 +16,11 @@ def build_dataloader(split,
                      dataset_name,
                      batch_size,
                      num_workers,
+                     logger,
                      shuffle=True,
                      pin_momory=True,
-                     sampler=None) :
+                     sampler=None,
+                     ) :
 
     data_key = dataset_name
     dataset = ALS2DTMDataset[data_key](split=split,
@@ -31,6 +33,7 @@ def build_dataloader(split,
                                                pin_memory=pin_momory,
                                                sampler=sampler)
 
-    print("\t==> data_loader size:{}".format(len(data_loader)))
+    #print("\t==> data_loader size:{}".format(len(data_loader)))
+    logger.info("\t==> data_loader size:{}".format(len(data_loader)))
 
     return data_loader, dataset.input_nc

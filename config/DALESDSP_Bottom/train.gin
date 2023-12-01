@@ -11,7 +11,7 @@ Pix2PixModel.load_iter = 0 # which iteration to load? if load_iter > 0, the code
 Pix2PixModel.epoch = 'latest' # which epoch to load? set to latest to use latest cached model'
 
 # Optimization
-train.batch_size = 32
+train.batch_size = 32 
 train.num_threads = 16 #4 # number of threads for loading data
 train.serial_batches = False # if true, takes images in order to make batches, otherwise takes them randomly
 #workers = 8 # Maybe not used.

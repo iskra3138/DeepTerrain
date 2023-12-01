@@ -9,8 +9,10 @@ import torch.utils.data as data
 class DALESDSPDataset(data.Dataset):
     """A data loader for NB dataset
     """
-    def __init__(self, split, dataset_name, input_list, dataroot, size=512):
+    def __init__(self, split, dataset_name, input_list, dataroot, pred_type='tanh', size=512):
         self.split = split  # train, val, test
+        assert pred_type in ['tanh', 'sigmoid'], 'tanh or sigmoid should be given'
+        self.pred_type = pred_type
         self.dataset_name = dataset_name
         self.input_list = input_list
         self.input_nc = len(input_list)
@@ -31,17 +33,34 @@ class DALESDSPDataset(data.Dataset):
 
         self.filenames = sorted(self.filenames)  # list of filename
 
-    def scaling (self, A, B, minz, maxz, input_list) :
+    def scaling_tanh(self, A, B, minz, maxz, input_list):
         """
         array3D: [ch, W, H]
         """
-        # Scale B into [-1, 1]
+        # Scale B into around [-1, 1] with minz and maxz of voxel-bottom
         B = (2 * (B - minz) / (maxz - minz)) - 1
 
         for i in range(A.shape[0]):
-            if input_list[i] in ['voxel-top', 'voxel-bottom', 'pixel-mean'] :
+            if input_list[i] in ['voxel-top', 'voxel-bottom', 'pixel-mean']:
                 A[i, :, :] = (2 * (A[i, :, :] - minz) / (maxz - minz)) - 1
-            else :
+            else:
+                ch_min = A[i, :, :].min()
+                ch_max = A[i, :, :].max()
+                A[i, :, :] = (A[i, :, :] - ch_min) / (ch_max - ch_min)
+
+        return A, B
+
+    def scaling_sigmoid(self, A, B, minz, maxz, input_list):
+        """
+        array3D: [ch, W, H]
+        """
+        # Scale B into around [0, 1] with minz and maxz of voxel-bottom
+        B = (B - minz) / (maxz - minz)
+
+        for i in range(A.shape[0]):
+            if input_list[i] in ['voxel-top', 'voxel-bottom', 'pixel-mean']:
+                A[i, :, :] = (A[i, :, :] - minz) / (maxz - minz)
+            else:
                 ch_min = A[i, :, :].min()
                 ch_max = A[i, :, :].max()
                 A[i, :, :] = (A[i, :, :] - ch_min) / (ch_max - ch_min)
@@ -117,11 +136,15 @@ class DALESDSPDataset(data.Dataset):
 
         # Scaling
         ### save min_z, max_z to scale B into [-1, 1] since output of net is tanh
-        min_z = B.min()
-        max_z = B.max()
+        bottom = np.load(os.path.join(self.dataset_path, 'voxel-bottom', self.filenames[index]))
+        min_z = bottom.min()
+        max_z = bottom.max()
         ### For elevation rasters, all values will be scaled with min_z and max_z
         ### For statistic rasters, each raster will be scaled to [0, 1]
-        A, B = self.scaling(A, B, min_z, max_z, self.input_list)
+        if self.pred_type == 'tanh':
+            A, B = self.scaling_tanh(A, B, min_z, max_z, self.input_list)
+        else:
+            A, B = self.scaling_sigmoid(A, B, min_z, max_z, self.input_list)
 
         # Padding
         diff_h, diff_w = self.size - B.shape[1], self.size - B.shape[2]
@@ -145,16 +168,16 @@ class DALESDSPDataset(data.Dataset):
         if self.split == 'train' :
             return {'A': A,
                     'B': B,
-                    'B_min': min_z,
-                    'B_max': max_z,
+                    'A_min': min_z,
+                    'A_max': max_z,
                     'filename': self.filenames[index]
                     }
         else :
             return {'A': A,
                     'B': B,
                     'seg': seg,
-                    'B_min': min_z,
-                    'B_max': max_z,
+                    'A_min': min_z,
+                    'A_max': max_z,
                     'filename': self.filenames[index],
                     'shape': B.shape[1:3]
                     }
