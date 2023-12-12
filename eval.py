@@ -69,7 +69,7 @@ def eval(
     # write config file
     #print(gin.operative_config_str())
     logger.info(gin.operative_config_str())
-    with open(os.path.join(save_dir, "eval_config.gin"), "w") as f:
+    with open(os.path.join(save_dir, "eval_config_{}.gin".format(args.dataset)), "w") as f:
         f.write(gin.operative_config_str())
 
     model.eval()
@@ -91,8 +91,8 @@ def eval(
         total_iter += 1
 
     #print(model.RMSE, total_iter, model.RMSE / total_iter)
-    logger.info('number of %s dataset: %d, RMSE(512*512): %.2f' % (args.split, total_iter, model.RMSE / total_iter))
-    logger.info('number of %s dataset: %d, RMSE(500*500): %.2f' % (args.split, total_iter, model.RMSE2 / total_iter))
+    logger.info('number of %s dataset: %d, RMSE: %.2f' % (args.split, total_iter, model.RMSE / total_iter))
+    logger.info('number of %s dataset: %d, RMSE: %.2f' % (args.split, total_iter, model.RMSE2 / total_iter))
 
 def main():
     parser = argparse.ArgumentParser(description='DSM-to-DTM')
@@ -115,7 +115,7 @@ def main():
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    log_file_name = os.path.join(save_dir, 'eval_log.txt')
+    log_file_name = os.path.join(save_dir, 'eval_log_{}_{}.txt'.format(args.dataset, args.split))
     logger = create_logger(log_file_name)
 
     eval(args, save_dir=save_dir, logger=logger)

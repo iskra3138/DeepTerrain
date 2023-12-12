@@ -1,5 +1,7 @@
 #pred_type = 'sigmoid'
 pred_type = 'tanh'
+size = 512
+
 # Data
 NBDataset.pred_type = %pred_type
 NBDataset.dataroot = '/nas2/YJ/DATA/ALS2DTM/'
@@ -7,6 +9,7 @@ NBDataset.dataroot = '/nas2/YJ/DATA/ALS2DTM/'
 NBDataset.input_list = [
     "voxel-bottom" #,  'voxel-bottom', 'pixel-mean', 'density', 'stdev', 'echoes'
 ]
+NBDataset.size = %size
 
 # Model
 Pix2PixModel.pred_type = %pred_type
@@ -23,6 +26,8 @@ Pix2PixModel.init_gain = 0.02 # scaling factor for normal, xavier and orthogonal
 Pix2PixModel.n_layers_D = 3 # only used if netD==n_layers 
 Pix2PixModel.gan_mode = 'vanilla' # the type of GAN objective. [vanilla| lsgan | wgangp]. vanilla GAN loss is the cross-entropy objective used in the original GAN paper.
 Pix2PixModel.verbose = False # if specified, print more debugging information
-Pix2PixModel.aux_loss = 'tv2' # gan, na, tv1, tv2
+Pix2PixModel.aux_loss = 'na' # gan, na, tv1, tv2
+Pix2PixModel.size = %size
+
 # Network
 UnetSkipConnectionBlock.pred_type = %pred_type

@@ -1,0 +1,34 @@
+include "./config/DSM2DTM/base.gin"
+
+#train.dataset_name ='NB'
+
+# Data
+
+# Model
+Pix2PixModel.isTrain = True
+Pix2PixModel.continue_train = False # continue training: load the latest model
+Pix2PixModel.load_iter = 0 # which iteration to load? if load_iter > 0, the code will load models by iter_[load_iter]; otherwise, the code will load models by [epoch]
+Pix2PixModel.epoch = 'latest' # which epoch to load? set to latest to use latest cached model'
+
+# Optimization
+train.batch_size = 32 
+train.num_threads = 16 #4 # number of threads for loading data
+train.serial_batches = False # if true, takes images in order to make batches, otherwise takes them randomly
+#workers = 8 # Maybe not used.
+train.epoch_count = 1 # the starting epoch count, we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>, ...
+train.n_epochs = 300 #100 # number of epochs with the initial learning rate
+train.n_epochs_decay = 700 #100 # number of epochs to linearly decay learning rate to zero'
+
+Pix2PixModel.lr = 0.01 # # initial learning rate for adam
+Pix2PixModel.beta1 = 0.5 # momentum term of adam
+Pix2PixModel.lambda_L1 = 100 # weight for L1 loss
+Pix2PixModel.lr_policy = 'linear' # learning rate policy. [linear | step | plateau | cosine]
+Pix2PixModel.lr_decay_iters = 50 # multiply by a gamma every lr_decay_iters iterations
+
+
+# Save and Visualization
+#display_freq = 400 # frequency of showing training results on screen
+train.print_freq = 100  # frequency of showing training results on console
+train.save_latest_freq = 50000 # frequency of saving the latest results
+train.save_epoch_freq = 100 # frequency of saving checkpoints at the end of epochs
+train.save_by_iter = False # whether saves model by iteration

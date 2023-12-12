@@ -1,0 +1,26 @@
+include "./config/DALES_Top/base.gin"
+
+label_names=['ground', 'vegetation', 'cars', 'trucks', 'power_lines', 'fences', 'poles', 'buildings', 'others']
+
+# Data
+eval.batch_size = 1 
+eval.num_threads = 0 # number of threads for loading data
+eval.serial_batches = True # if true, takes images in order to make batches, otherwise takes them randomly
+eval.label_names=%label_names
+
+
+# Model
+Pix2PixModel.isTrain = False
+#Pix2PixModel.continue_train = False # continue training: load the latest model
+Pix2PixModel.load_iter = 0 # which iteration to load? if load_iter > 0, the code will load models by iter_[load_iter]; otherwise, the code will load models by [epoch]
+Pix2PixModel.epoch = 'latest' # which epoch to load? set to latest to use latest cached model'
+Pix2PixModel.keys=%label_names
+Pix2PixModel.label_dics = {'ground': 1,
+                          'vegetation': 2,
+                          'cars': 3,
+                          'trucks': 4,
+                          'power_lines': 5,
+                          'fences': 6,
+                          'poles': 7,
+                          'buildings': 8,
+                          'others': 0}

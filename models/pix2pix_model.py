@@ -57,7 +57,8 @@ class Pix2PixModel(BaseModel):
                  lr_policy='linear',
                  lr_decay_iters=50,
                  pred_type='tanh',
-                 aux_loss='na'
+                 aux_loss='na',
+                 size=512
                  ):
         """Initialize the pix2pix class.
 
@@ -72,7 +73,8 @@ class Pix2PixModel(BaseModel):
                            beta1=beta1,
                            lambda_L1=lambda_L1,
                            lr_policy=lr_policy,
-                           lr_decay_iters=lr_decay_iters
+                           lr_decay_iters=lr_decay_iters,
+                           size=size
                            )
         assert pred_type in ['tanh', 'sigmoid'], 'tanh or sigmoid should be given'
         self.pred_type = pred_type
@@ -150,13 +152,15 @@ class Pix2PixModel(BaseModel):
 
     def save_prediction(self, preds):
         ## Save fake_B
-        preds_save_dir = os.path.join(self.save_dir, 'preds')
+        preds_save_dir = os.path.join(self.save_dir, 'preds_{}'.format(self.args.dataset))
         #self.logger.info('Results will be saved on %s' % preds_save_dir)
         if not os.path.exists(preds_save_dir):
             os.makedirs(preds_save_dir)
         for i, pred in enumerate(preds) :
             if 'mat' in self.filename[i] :
                 filename = self.filename[i].replace('mat', 'npy')
+            else :
+                filename = self.filename[i]
             with open(os.path.join(preds_save_dir, filename), 'wb') as f:
                 np.save(f, pred.cpu().numpy()[0])
 
@@ -207,12 +211,15 @@ class Pix2PixModel(BaseModel):
 
         if not self.isTrain:
             self.save_prediction(self.fake_B)
-            dtm = self.real_B[:, :, 6:-6, 6:-6]
-            pred = self.fake_B[:, :, 6:-6, 6:-6]
-            seg = self.seg[:, :, 6:-6, 6:-6]
+            if self.size == 512 :
+                dtm = self.real_B[:, :, 6:-6, 6:-6]
+                pred = self.fake_B[:, :, 6:-6, 6:-6]
+                seg = self.seg[:, :, 6:-6, 6:-6]
+            else :
+                dtm = self.real_B
+                pred = self.fake_B
+                seg = self.seg
             self.RMSE += torch.sqrt(torch.mean((pred - dtm) ** 2))
-
-
 
             for i in range(dtm.shape[0]) :
                 RMSE, rmse_dict, occup_dict = self.get_classwise_RMSE(self.keys, seg[i], pred[i], dtm[i])

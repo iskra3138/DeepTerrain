@@ -1,15 +1,15 @@
 #pred_type = 'sigmoid'
 pred_type = 'tanh'
-size = 512
+size = 256
 
 # Data
-DALESDSPDataset.pred_type = %pred_type
-DALESDSPDataset.dataroot = '/nas2/YJ/DATA/ALS2DTM/'
+KWDataset.pred_type = %pred_type
+KWDataset.dataroot = '/nas2/YJ/DATA/TERRAIN/ForNetwork'
 #### input_list is combination of 'voxel-top', 'voxel-bottom', 'pixel-mean', 'density', 'stdev' and 'echoes'
-DALESDSPDataset.input_list = [
-    "voxel-bottom" #,  'voxel-bottom', 'pixel-mean', 'density', 'stdev', 'echoes'
+KWDataset.input_list = [
+    "dsm" #,  'voxel-bottom', 'pixel-mean', 'density', 'stdev', 'echoes'
 ]
-DALESDSPDataset.size = %size
+KWDataset.size = %size
 
 # Model
 Pix2PixModel.pred_type = %pred_type

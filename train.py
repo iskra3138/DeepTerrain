@@ -9,6 +9,7 @@ import torch.utils.data
 
 from dataloaders import build_dataloader
 from models.pix2pix_model import Pix2PixModel
+from models.segformer import Segformer
 from utils.utils import create_logger
 
 def print_current_losses(epoch, iters, losses, t_comp, t_data, logger):
@@ -84,6 +85,7 @@ def train(
     #print("=> creating model and optimizer ... ", end='')
     logger.info('------------------------- creating model -------------------------')
     model = Pix2PixModel(args, save_dir=save_dir, input_nc=input_nc, logger=logger)
+    model = Segformer()
     model.setup(epoch_count, n_epochs, n_epochs_decay)
     logger.info('------------------------- created model -------------------------')
 
@@ -142,18 +144,20 @@ def train(
         logger.info('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, n_epochs + n_epochs_decay, time.time() - epoch_start_time))
 def main():
     parser = argparse.ArgumentParser(description='DSM-to-DTM')
-    parser.add_argument('--config', type=str, default='./config/NB/train.gin', help='path of configures')
+    parser.add_argument('--config', type=str, default='./config/NB_Bottom/train.gin', help='path of configures')
     parser.add_argument('--dataset', type=str, default='NB', help='name of dataset')
     parser.add_argument('--name', type=str, default='als2dtm_pix2pix_debug',
                         help='name of the experiment. It decides where to store samples and models')
     parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-    parser.add_argument('--checkpoints_dir', type=str, default='./results', help='models are saved here')
+    parser.add_argument('--output_dir', type=str, default='./results', help='models are saved here')
 
     args = parser.parse_args()
     gin.parse_config_file(args.config)
 
+
+
     # Make save directory
-    save_dir = os.path.join(args.checkpoints_dir, args.name)
+    save_dir = os.path.join(args.output_dir, args.name)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 

@@ -4,12 +4,22 @@ from dataloaders.NB_dataset import NBDataset
 from dataloaders.NBYJ_dataset import NBYJDataset
 from dataloaders.DALES_dataset import DALESDataset
 from dataloaders.DALESDSP_dataset import DALESDSPDataset
+from dataloaders.SUI_dataset import SUIDataset
+from dataloaders.SUII_dataset import SUIIDataset
+from dataloaders.KW_dataset import KWDataset
+from dataloaders.RT_dataset import RTDataset
+from dataloaders.DSM2DTM_dataset import DSM2DTMDataset
 
 ALS2DTMDataset = {
     'DALES': DALESDataset,
     'NB': NBDataset,
     'NBYJ': NBYJDataset,
-    'DALESDSP': DALESDSPDataset
+    'DALESDSP': DALESDSPDataset,
+    'SUI': DSM2DTMDataset,
+    'SUII': DSM2DTMDataset,
+    'KW': DSM2DTMDataset,
+    'RT': DSM2DTMDataset,
+    'DSM2DTM': DSM2DTMDataset,
 }
 
 def build_dataloader(split,

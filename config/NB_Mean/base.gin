@@ -3,13 +3,13 @@ pred_type = 'tanh'
 size = 512
 
 # Data
-DALESDSPDataset.pred_type = %pred_type
-DALESDSPDataset.dataroot = '/nas2/YJ/DATA/ALS2DTM/'
+NBDataset.pred_type = %pred_type
+NBDataset.dataroot = '/nas2/YJ/DATA/ALS2DTM/'
 #### input_list is combination of 'voxel-top', 'voxel-bottom', 'pixel-mean', 'density', 'stdev' and 'echoes'
-DALESDSPDataset.input_list = [
-    "voxel-bottom" #,  'voxel-bottom', 'pixel-mean', 'density', 'stdev', 'echoes'
+NBDataset.input_list = [
+    "pixel-mean" #,  'voxel-bottom', 'pixel-mean', 'density', 'stdev', 'echoes'
 ]
-DALESDSPDataset.size = %size
+NBDataset.size = %size
 
 # Model
 Pix2PixModel.pred_type = %pred_type

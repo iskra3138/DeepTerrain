@@ -17,7 +17,7 @@ class BaseModel(ABC):
 
     def __init__(self, args, save_dir, input_nc, output_nc,  ngf,  ndf, netG,  netD,  norm,  no_dropout,  init_type,
                  init_gain, n_layers_D, gan_mode, verbose,  isTrain,  load_iter, epoch,  logger,
-                 continue_train, lr, beta1, lambda_L1, lr_policy, lr_decay_iters, ):
+                 continue_train, lr, beta1, lambda_L1, lr_policy, lr_decay_iters, size ):
         """Initialize the BaseModel class.
 
         Parameters:
@@ -62,6 +62,7 @@ class BaseModel(ABC):
         self.RMSE = 0
         self.RMSE2 = 0
         self.logger = logger
+        self.size = size
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
